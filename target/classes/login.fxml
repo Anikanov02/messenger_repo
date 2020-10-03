@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<Pane fx:id="signInPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="jdbc.LoginController">
+   <children>
+      <Button fx:id="backToSignUpButton" layoutX="385.0" layoutY="14.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="100.0" text="Back to sign up" />
+      <PasswordField fx:id="signInPasswordField" layoutX="115.0" layoutY="138.0" prefHeight="25.0" prefWidth="270.0" promptText="Enter password" />
+      <TextField fx:id="signInLoginField" layoutX="115.0" layoutY="87.0" prefHeight="25.0" prefWidth="270.0" promptText="Enter login" />
+      <Button fx:id="signInButton" layoutX="180.0" layoutY="223.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="120.0" text="Sign In" />
+      <Label fx:id="infoLabel" alignment="CENTER" layoutX="115.0" layoutY="187.0" prefHeight="17.0" prefWidth="270.0" />
+      <CheckBox fx:id="checkBox" layoutX="115.0" layoutY="187.0" mnemonicParsing="false" text="Remember me" />
+   </children>
+</Pane>

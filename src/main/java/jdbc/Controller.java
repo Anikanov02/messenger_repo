@@ -48,7 +48,12 @@ public class Controller {
     private static String name;
     private static String gender;   
     private static int limit=100;
-    public static boolean running;  
+    public static boolean running;
+
+	enum loadOption{
+		MAIN_CHAT_STACK,
+		DESIRED_CHATS
+	}
     
     public synchronized void refresh(String message) {
 
@@ -64,7 +69,7 @@ public class Controller {
 		} 
     	
     }
-    public static void getUserData(int idRec) {
+    public static void setUserData(int idRec) {
     	try {
     	idreciever=idRec;
     	ResultSet set=Main.getResult("select*from users where idusers = "+idreciever);
@@ -90,17 +95,25 @@ public class Controller {
     private void startRefreshing() {
     	new Thread(new Refresher(this),"Refresher").start();
     }
-     
-    @FXML
-    void initialize() {
-    	
-    	running=true;
-    	try {
-    		 ResultSet usersChat= Main.getResult("select u.idusers as id_collocutor, \r\n" + 
-    		 		"concat(u.firstname, ' ' ,u.lastname) as collocutors_name, status \r\n" + 
-    		 		"from collocutors c\r\n" + 
-    		 		"inner join users u on c.id_collocutor=u.idusers\r\n" + 
-    		 		"where id_owner="+idreciever);
+    private void loadChats(@org.jetbrains.annotations.NotNull loadOption lo) {
+		try {
+			listView.getItems().removeAll(listView.getItems());//delete existing chats to load new
+			ResultSet usersChat;
+			switch(lo) {
+				case MAIN_CHAT_STACK :
+					usersChat = Main.getResult("call p_Get_Users_Chats("+idreciever+")");
+				break;
+
+				case DESIRED_CHATS:
+					usersChat = Main.getResult("call p_Get_Desired_Chats('"+searchTextField.getText().trim()+"')");
+				break;
+
+				default:
+					usersChat = Main.getResult("");
+				break;
+
+
+			}
 			while(usersChat.next()) {
 				Button chatButton;
 				final int id_sender_temp=usersChat.getInt("id_collocutor");
@@ -115,73 +128,80 @@ public class Controller {
 							messageList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
 							if(idsender==-1) {
-				    			startRefreshing();
+								startRefreshing();
 //System.out.println("refreshing started");
-				    		}
+							}
 							idsender=id_sender_temp;
 //System.out.println(idsender);
 							ResultSet topId=Main.getResult("select max(messageid) from messages where idsender = "+idsender+" and idreciever = "+idreciever );
-				    		while(topId.next()) {
-				    			topMesId=topId.getInt("max(messageid)");
-				    		}
-				    		topId.close();
-				    		Refresher.setTopMesId(topMesId);
-								
+							while(topId.next()) {
+								topMesId=topId.getInt("max(messageid)");
+							}
+							topId.close();
+							Refresher.setTopMesId(topMesId);
+
 							String s="";
-				    		ResultSet result=Main.getResult("select*from(select* from messages where idsender = "+idsender+" and idreciever = "+idreciever+" or(idsender = "+idreciever+" and idreciever = "+idsender+") order by messageid desc limit "+limit+") t order by messageid asc");
-				    		ResultSet nameres;
-				    		while(result.next()) {
-				    			
-				    			int id=result.getInt("idsender");
-				    			nameres=Main.getResult("select firstname,lastname from users where idusers = "+id);
-				    			while(nameres.next()) {
-				    			s+=nameres.getString("firstname")+" "+nameres.getString("lastname")+": ";
-				    			}
-				    			nameres.close();
-				    			s+=result.getString("messText")+"\n";
-				    			messageList.getItems().add(new Label(s));
-				    			s="";
-				    			
-				    		}
-				    		messageList.scrollTo(messageList.getItems().size());
+							ResultSet result=Main.getResult("select*from(select* from messages where idsender = "+idsender+" and idreciever = "+idreciever+" or(idsender = "+idreciever+" and idreciever = "+idsender+") order by messageid desc limit "+limit+") t order by messageid asc");
+							ResultSet nameres;
+							while(result.next()) {
+
+								int id=result.getInt("idsender");
+								nameres=Main.getResult("select firstname,lastname from users where idusers = "+id);
+								while(nameres.next()) {
+									s+=nameres.getString("firstname")+" "+nameres.getString("lastname")+": ";
+								}
+								nameres.close();
+								s+=result.getString("messText")+"\n";
+								messageList.getItems().add(new Label(s));
+								s="";
+
+							}
+							messageList.scrollTo(messageList.getItems().size());
 
 
-				    		result.close();
-				    		
-				    		Refresher.unable();
-				    		
+							result.close();
+
+							Refresher.unable();
+
 						} catch (SQLException e) {
 							e.printStackTrace();
 						}
 					}
 				});
-				
+
 			}
-			usersChat.close();
+			usersChat.close();//????
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 		}
-    		
-      sendMessageButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-          public void handle(MouseEvent mouseEvent) {
-             
-        	  String s=textField.getText();
-        	  if(s.compareTo("")!=0) {
-        	 messageList.getItems().add(new Label(name+" "+lastname+": "+ s+"\n"));
-        	 textField.deleteText(0,textField.getText().length());
-        	 String Query="CALL p_SendMessage("+"'"+s+"'"+","+idreciever+","+idsender+");";
-        	 Main.setMessage(Query);
-        	 s="";
+    }
+    @FXML
+    void initialize() {
+    	
+    	running=true;
+    	loadChats(loadOption.MAIN_CHAT_STACK);
+    	sendMessageButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+          	public void handle(MouseEvent mouseEvent) {
+        	  	String s=textField.getText();
+        	  	if(s.compareTo("")!=0) {
+        	 	messageList.getItems().add(new Label(name+" "+lastname+": "+ s+"\n"));
+        	 	textField.deleteText(0,textField.getText().length());
+        	 	String Query="CALL p_SendMessage("+"'"+s+"'"+","+idreciever+","+idsender+");";
+        	 	Main.setMessage(Query);
+        	 	s="";
         	  }
         	       	  
-          }
+          	}
       });
 
-      
-      
-      
-      
-      
+    	searchButton.addEventFilter(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+			@Override
+			public void handle(MouseEvent event) {
+
+				loadChats(loadOption.DESIRED_CHATS);
+
+			}
+		});
       
     }
 }

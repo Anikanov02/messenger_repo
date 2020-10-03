@@ -101,8 +101,8 @@ public class LoginController {
     				
     				
     				//ResultSet checklogin=Main.getResult("Select f_CheckPwd('"+login+"','"+password+"') as idusers");
-    				ResultSet checklogin=Main.getResult("Select idusers from users where login="+"'"+login+"'"+"and password="+"'"+password+"'");
-    				if(checklogin.next()) {
+    				ResultSet checklogin=Main.getResult("select f_CheckPwd('"+login+"','"+password+"') as idusers");
+    				if(checklogin.next()) {//such user exists
     				
     					if(checkBox.isSelected()) {  							 
     						FileWriter fw= new FileWriter(new File(filePath),false);
@@ -111,7 +111,7 @@ public class LoginController {
     						fw.close();
     					}
     					
-    				Controller.getUserData(checklogin.getInt("idusers"));
+    				Controller.setUserData(checklogin.getInt("idusers"));
     				Stage prefStage= (Stage)signInButton.getScene().getWindow();
     				prefStage.hide();
     				Stage stage= new Stage();
