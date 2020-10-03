@@ -14,7 +14,7 @@
       </ScrollPane>
       <TextField fx:id="searchTextField" prefHeight="25.0" prefWidth="185.0" />
       <Button fx:id="searchButton" layoutX="185.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="55.0" text="Search" />
-      <TextArea fx:id="textField" layoutX="240.0" layoutY="374.0" prefHeight="25.0" prefWidth="265.0" />
+      <TextArea fx:id="textField" disable="true" layoutX="240.0" layoutY="374.0" prefHeight="25.0" prefWidth="265.0" />
       <ListView fx:id="messageList" layoutX="240.0" prefHeight="375.0" prefWidth="362.0" />
    </children>
 </Pane>

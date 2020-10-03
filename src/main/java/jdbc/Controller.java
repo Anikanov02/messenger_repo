@@ -35,7 +35,6 @@ public class Controller {
 	@FXML
 	private ListView<Label> messageList;
 
-
     @FXML
     private  TextArea textField;
     
@@ -50,7 +49,7 @@ public class Controller {
     private static int limit=100;
     public static boolean running;
 
-	enum loadOption{
+	private static enum loadOption{
 		MAIN_CHAT_STACK,
 		DESIRED_CHATS
 	}
@@ -100,18 +99,18 @@ public class Controller {
 			listView.getItems().removeAll(listView.getItems());//delete existing chats to load new
 			ResultSet usersChat;
 			switch(lo) {
+
 				case MAIN_CHAT_STACK :
 					usersChat = Main.getResult("call p_Get_Users_Chats("+idreciever+")");
-				break;
+					break;
 
 				case DESIRED_CHATS:
 					usersChat = Main.getResult("call p_Get_Desired_Chats('"+searchTextField.getText().trim()+"')");
-				break;
+					break;
 
 				default:
 					usersChat = Main.getResult("");
 				break;
-
 
 			}
 			while(usersChat.next()) {
@@ -126,7 +125,7 @@ public class Controller {
 							Refresher.disable();
 							messageList.getItems().removeAll(messageList.getItems());
 							messageList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-
+							textField.setDisable(false);
 							if(idsender==-1) {
 								startRefreshing();
 //System.out.println("refreshing started");
@@ -170,7 +169,7 @@ public class Controller {
 				});
 
 			}
-			usersChat.close();//????
+			usersChat.close();
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 		}
@@ -182,23 +181,35 @@ public class Controller {
     	loadChats(loadOption.MAIN_CHAT_STACK);
     	sendMessageButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
           	public void handle(MouseEvent mouseEvent) {
+				if (messageList.getItems().isEmpty()){
+					Main.updateDB("call p_Register_New_Chat("+idreciever+","+idsender+")");
+				}
         	  	String s=textField.getText();
         	  	if(s.compareTo("")!=0) {
         	 	messageList.getItems().add(new Label(name+" "+lastname+": "+ s+"\n"));
         	 	textField.deleteText(0,textField.getText().length());
-        	 	String Query="CALL p_SendMessage("+"'"+s+"'"+","+idreciever+","+idsender+");";
-        	 	Main.setMessage(Query);
+        	 	Main.setMessage("CALL p_SendMessage("+"'"+s+"'"+","+idreciever+","+idsender+");");
         	 	s="";
+
         	  }
         	       	  
           	}
       });
 
-    	searchButton.addEventFilter(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+    	searchButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent event) {
-
-				loadChats(loadOption.DESIRED_CHATS);
+				if(searchTextField.getText().trim().compareTo("")==0) {
+					loadChats(loadOption.MAIN_CHAT_STACK);
+					searchButton.setText("Search");
+				}else{
+					if(searchTextField.getText().trim().compareTo("")!=0) {
+						loadChats(loadOption.DESIRED_CHATS);
+						searchButton.setText("Back");
+					}else{
+						searchTextField.setPromptText("Enter username");
+					}
+				}
 
 			}
 		});

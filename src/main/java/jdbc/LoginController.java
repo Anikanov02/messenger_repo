@@ -101,7 +101,7 @@ public class LoginController {
     				
     				
     				//ResultSet checklogin=Main.getResult("Select f_CheckPwd('"+login+"','"+password+"') as idusers");
-    				ResultSet checklogin=Main.getResult("select f_CheckPwd('"+login+"','"+password+"') as idusers");
+    				ResultSet checklogin=Main.getResult("call p_CheckPwd('"+login+"','"+password+"')");
     				if(checklogin.next()) {//such user exists
     				
     					if(checkBox.isSelected()) {  							 
